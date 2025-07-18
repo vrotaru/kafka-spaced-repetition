@@ -1,0 +1,11 @@
+# IDEs
+.classpath
+.project
+.settings
+.vscode
+.idea
+
+# maven
+target
+dependency-reduced-pom.xml
+
