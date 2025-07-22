@@ -30,6 +30,8 @@ public class Spaced_List {
     private final static int MAX_ITEMS = 14;
     private final static long MAX_WAIT_MS = 200L;
 
+    private static volatile boolean allDone = false;
+
     public static void main(String[] args) {
         var console = System.console();
 
@@ -73,9 +75,27 @@ public class Spaced_List {
             }
         }
 
+        var iterator = toReview.iterator();
+
         // The review proper
         try (var producer = new KafkaProducer<String, Message>(producerConfig())) {
-            for (var message : toReview) {
+            // Add a shutdown hook, mostly for the case user will press <Ctrl+C>
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                if (allDone) {
+                    return;
+                }
+
+                console.format("Interrupted. Re-adding skipped questions.%n");
+                while (iterator.hasNext()) {
+                    var message = iterator.next();
+                    var producerRecord = new ProducerRecord<>(TOPIC, message.id(), message);
+                    producer.send(producerRecord, callback);
+                }
+            }));
+
+            while (iterator.hasNext()) {
+                var message = iterator.next();
+
                 console.readLine("Question: %s%n  (press <Enter> to continue)", message.question());
                 var input = console.readLine("Answer  : %s%n  (Press 'y' and <Enter> if you knew the answer) ",
                         message.answer())
@@ -90,7 +110,7 @@ public class Spaced_List {
                 }
                 producer.send(producerRecord, callback);
             }
-
+            allDone = true;
         }
     }
 

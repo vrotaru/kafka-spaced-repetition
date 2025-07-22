@@ -28,5 +28,5 @@ It is not even a toy. And it obviously undersells both spaced repetion systems a
 
 ## Some stuff which I may add.
 
-  - [ ] A shutdown hook to write back the unreviewed questions.
+  - [x] A shutdown hook to write back the unreviewed questions.
   - [ ] An Avro serializer, instead of the custom one.
