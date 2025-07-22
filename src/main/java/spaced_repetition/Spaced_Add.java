@@ -44,7 +44,7 @@ public class Spaced_Add {
 
         try (var producer = new KafkaProducer<String, Message>(props)) {
             var id = UUID.randomUUID().toString();
-            var message = new Message(id, question, 0, answer);
+            var message = new Message(question, answer);
             var record = new ProducerRecord<>(TOPIC, id, message);
             producer.send(record, callback);
         }
