@@ -1,7 +1,6 @@
 package spaced_repetition;
 
 import java.util.Properties;
-import java.util.UUID;
 
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
