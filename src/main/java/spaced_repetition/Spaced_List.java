@@ -17,15 +17,18 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
-import spaced_repetition.model.Message;
-import spaced_repetition.model.MessageSerde.MessageDeserializer;
-import spaced_repetition.model.MessageSerde.MessageSerializer;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+import spaced_repetition.avro.Message;
 
 public class Spaced_List {
     private final static String APPLICATION_ID = Spaced_List.class.getName();
 
-    private final static String TOPIC = "srs-topic";
+    private final static String TOPIC = "srs-topic-avro";
     private final static String BOOTSTRAP_SERVER = "localhost:9092";
+    private final static String REGISTRY_SCHEMA = "http://localhost:8081";
 
     private final static int MAX_ITEMS = 14;
     private final static long MAX_WAIT_MS = 200L;
@@ -54,7 +57,7 @@ public class Spaced_List {
 
                 for (var entry : records) {
                     var message = entry.value();
-                    if (message.correctAnswers() <= 2) {
+                    if (message.getCorrectAnswers() <= 2) {
                         toReview.add(message);
                     }
 
@@ -88,25 +91,29 @@ public class Spaced_List {
                 console.format("Interrupted. Re-adding skipped questions.%n");
                 while (iterator.hasNext()) {
                     var message = iterator.next();
-                    var producerRecord = new ProducerRecord<>(TOPIC, message.id(), message);
+                    var uuid = message.getId().toString();
+
+                    var producerRecord = new ProducerRecord<>(TOPIC, uuid, message);
                     producer.send(producerRecord, callback);
                 }
             }));
 
             while (iterator.hasNext()) {
                 var message = iterator.next();
+                var uuid = message.getId().toString();
 
-                console.readLine("Question: %s%n  (press <Enter> to continue)", message.question());
+                console.readLine("Question: %s%n  (press <Enter> to continue)", message.getQuestion());
                 var input = console.readLine("Answer  : %s%n  (Press 'y' and <Enter> if you knew the answer) ",
-                        message.answer())
+                        message.getAnswer())
                         .toLowerCase();
 
                 ProducerRecord<String, Message> producerRecord = null;
                 if (!input.isBlank() & input.strip().startsWith("y")) {
-                    producerRecord = new ProducerRecord<>(TOPIC, message.id(), message.up());
+                    message.setCorrectAnswers(message.getCorrectAnswers() + 1);
+                    producerRecord = new ProducerRecord<>(TOPIC, uuid, message);
                 }
                 else {
-                    producerRecord = new ProducerRecord<>(TOPIC, message.id(), message);
+                    producerRecord = new ProducerRecord<>(TOPIC, uuid, message);
                 }
                 producer.send(producerRecord, callback);
             }
@@ -119,7 +126,10 @@ public class Spaced_List {
         // Producer configuration
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, MessageSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
+
+        // Avro serializer configuration
+        props.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, REGISTRY_SCHEMA);
 
         // Optional configuration
         props.put(ProducerConfig.ACKS_CONFIG, "all");
@@ -136,7 +146,11 @@ public class Spaced_List {
         // Streams configuration
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, MessageDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class.getName());
+
+        // Avro deserializer configuration
+        props.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, REGISTRY_SCHEMA);
+        props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, "true");
 
         props.put(ConsumerConfig.GROUP_ID_CONFIG, APPLICATION_ID);
         // Do not auto-commit

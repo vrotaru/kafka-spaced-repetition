@@ -1,0 +1,27 @@
+{
+    "name": "Message",
+    "namespace": "spaced_repetition.avro",
+    "type": "record",
+    "fields": [
+        {
+            "name": "id",
+            "type": {
+                "type": "string",
+                "logicalType": "uuid"
+            }
+        },
+        {
+            "name": "question",
+            "type": "string"
+        },
+        {
+            "name": "correctAnswers",
+            "type": "int",
+            "default": 0
+        },
+        {
+            "name": "answer",
+            "type": "string"
+        }
+    ]
+}
