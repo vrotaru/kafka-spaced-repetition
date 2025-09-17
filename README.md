@@ -1,6 +1,6 @@
 # Kafka Spaced Repetion Example
 
-> Preconditions: You have Kafka runing on `localhost:9032` and `just` installed on you computer. And Java (24)
+> Preconditions: You have Kafka runing on `localhost:9032` and Schema Registry running on `localhost:8081` and `just` installed on you computer. And Java (24)
 
 ## How to use
 
@@ -12,7 +12,7 @@ just add # and follow the prompts
 To review added questions 
 
 ```Shell
-just list
+just review
 ```
 
 ## Motivation
@@ -29,4 +29,4 @@ It is not even a toy. And it obviously undersells both spaced repetion systems a
 ## Some stuff which I may add.
 
   - [x] A shutdown hook to write back the unreviewed questions.
-  - [ ] An Avro serializer, instead of the custom one.
+  - [x] An Avro serializer, instead of the custom one.

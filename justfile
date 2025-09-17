@@ -1,5 +1,5 @@
 # List and review
-list:
+review:
     java -cp target/kafka-example-0.0.1-SNAPSHOT.jar spaced_repetition.Spaced_List
 
 # Add questions
