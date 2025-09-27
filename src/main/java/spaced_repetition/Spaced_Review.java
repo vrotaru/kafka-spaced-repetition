@@ -23,8 +23,8 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import spaced_repetition.avro.Message;
 
-public class Spaced_List {
-    private final static String APPLICATION_ID = Spaced_List.class.getName();
+public class Spaced_Review {
+    private final static String APPLICATION_ID = Spaced_Review.class.getName();
 
     private final static String TOPIC = "srs-topic-avro";
     private final static String BOOTSTRAP_SERVER = "localhost:9092";
